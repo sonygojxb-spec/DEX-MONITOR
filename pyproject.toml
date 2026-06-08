@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dex-agent"
+version = "0.1.0"
+description = "DEX Trading Agent - automated monitoring, analysis, and trading for tokens on decentralized exchanges"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+test = [
+    "hypothesis>=6.0",
+    "pytest>=7.0",
+    "pytest-asyncio>=0.23",
+]
+
+[tool.setuptools.packages.find]
+include = ["dex_agent*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+# pytest-asyncio: allow plain `async def test_...` functions without per-test markers.
+asyncio_mode = "auto"
+addopts = "-ra"
+
+[tool.hypothesis]
+# A default profile is registered and loaded in tests/conftest.py with
+# max_examples = 100 (see settings.register_profile / load_profile there).

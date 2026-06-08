@@ -36,18 +36,19 @@ running system, with no orphaned code:
 
 ## Tasks
 
-- [ ] 1. Set up project structure, tooling, and test harness
-  - Create the Python package layout: `dex_agent/` with sub-packages `models/`, `providers/`,
-    `repositories/`, `analysis/`, `decision/`, `execution/`, `control/`, `notify/`, `config/`,
-    `audit/`; and a `tests/` tree mirroring it.
-  - Add `pyproject.toml` with dependencies: `hypothesis`, `pytest`, `pytest-asyncio` (for async
-    monitoring loops); configure pytest and a default Hypothesis profile of `max_examples=100`.
-  - Define the shared `Result` type (success/typed-error union) and the typed error taxonomy
-    (`ProviderError`, `TimedOut`, `Unverified`, `NotFound`) used across component boundaries.
-  - _Requirements: foundational (supports all); Design: "Technology Approach", "Error model"_
+- [x] 1. Set up project structure, tooling, and test harness
+  - [ ] 1.1 Scaffold the package layout, tooling, and shared Result/error types
+    - Create the Python package layout: `dex_agent/` with sub-packages `models/`, `providers/`,
+      `repositories/`, `analysis/`, `decision/`, `execution/`, `control/`, `notify/`, `config/`,
+      `audit/`; and a `tests/` tree mirroring it.
+    - Add `pyproject.toml` with dependencies: `hypothesis`, `pytest`, `pytest-asyncio` (for async
+      monitoring loops); configure pytest and a default Hypothesis profile of `max_examples=100`.
+    - Define the shared `Result` type (success/typed-error union) and the typed error taxonomy
+      (`ProviderError`, `TimedOut`, `Unverified`, `NotFound`) used across component boundaries.
+    - _Requirements: foundational (supports all); Design: "Technology Approach", "Error model"_
 
-- [ ] 2. Define core data models and enums
-  - [ ] 2.1 Implement identity, market, and security models
+- [x] 2. Define core data models and enums
+  - [x] 2.1 Implement identity, market, and security models
     - Implement `Network`, `Token`, `TradingPair`, `WatchlistEntry`, `PairSnapshot` and the
       `Severity` ordered enum `{None=0, Low=1, Medium=2, High=3, Critical=4}`, plus `SecurityIssue`
       and `SecurityEvaluation`.
@@ -55,7 +56,7 @@ running system, with no orphaned code:
     - Constrain `TradingPair.quote_asset` to the supported quote assets **SOL** and **USDC** for the
       initial Solana deployment (validated where pairs are constructed/resolved).
     - _Requirements: 2.1; Design: "Data Models", "External Integrations", `SEVERITY_ORDER`_
-  - [ ] 2.2 Implement wallet, metrics, signal, position, order, config, audit, and auth models
+  - [x] 2.2 Implement wallet, metrics, signal, position, order, config, audit, and auth models
     - Implement `WalletClassification`, `WalletAnalysis`, `HolderBalance`, `MetricKind`,
       `MetricEntry` (value or `MISSING`), `AuditInfo`, `SignalType`/`ExitClass`/`Signal`,
       `Position`, `RiskProfile`, `OrderKind`/`OrderStatus`/`OrderRecord`, `Configuration`,
@@ -72,21 +73,22 @@ running system, with no orphaned code:
       default 15), plus `discovery_scan_interval_s` (range [30,300]) and a single `measurement_period_s`
       (range [60,86400]).
     - _Requirements: 3.x, 4.x, 5.x, 6.x, 7.1, 7.2, 9.1, 9.x, 10.1, 11.6, 12.1-12.4; Design: "Data Models"_
-  - [ ]* 2.3 Write unit tests for model construction and the severity ordering helper
+  - [x]* 2.3 Write unit tests for model construction and the severity ordering helper
     - Verify `Severity` ordering and `max_by_ordinal` edge cases (empty, single, ties).
     - _Requirements: 2.1, 2.7_
 
-- [ ] 3. Define repository abstractions and in-memory implementations
-  - Define repository interfaces for Tokens, Pairs, Watchlist, SecurityEval, WalletAnalysis,
-    Metrics time-series, Signals, Positions, RiskProfile, Config, Audit, and Authorization.
-  - Implement in-memory repositories with append idempotency keyed by
-    `(pair_id, kind, timestamp)` / `tx_id` so retries cannot create duplicates.
-  - Provide a shared, reusable `entries_in_range(items, start, end)` query primitive (inclusive,
-    ascending) and an `older_than(items, period)` retention primitive used by both Metrics and Audit.
-  - _Requirements: 1.4 (data retention), 4.4, 4.6, 10.2; Design: "Persistence Layer", "Concurrency / Idempotent persistence"_
+- [x] 3. Define repository abstractions and in-memory implementations
+  - [x] 3.1 Implement repository interfaces, in-memory repos, and shared query primitives
+    - Define repository interfaces for Tokens, Pairs, Watchlist, SecurityEval, WalletAnalysis,
+      Metrics time-series, Signals, Positions, RiskProfile, Config, Audit, and Authorization.
+    - Implement in-memory repositories with append idempotency keyed by
+      `(pair_id, kind, timestamp)` / `tx_id` so retries cannot create duplicates.
+    - Provide a shared, reusable `entries_in_range(items, start, end)` query primitive (inclusive,
+      ascending) and an `older_than(items, period)` retention primitive used by both Metrics and Audit.
+    - _Requirements: 1.4 (data retention), 4.4, 4.6, 10.2; Design: "Persistence Layer", "Concurrency / Idempotent persistence"_
 
-- [ ] 4. Define provider interfaces, in-memory fakes, and Solana adapters (primary Moralis adapter + real-time/fallback adapters)
-  - [ ] 4.1 Define provider interfaces and in-memory fakes
+- [x] 4. Define provider interfaces, in-memory fakes, and Solana adapters (primary Moralis adapter + real-time/fallback adapters)
+  - [x] 4.1 Define provider interfaces and in-memory fakes
     - Define interfaces `MarketDataProvider`, `ChainDataProvider`, `ContractInspectorProvider`,
       `TradeVenueProvider`, and `NotificationChannel` exactly as in the design.
     - Implement in-memory fakes for each (scriptable responses, injectable failures/timeouts, recorded
@@ -94,7 +96,7 @@ running system, with no orphaned code:
       the interfaces and uses these fakes so input variation stays cheap and trade-execution safety can
       be exercised at scale without network/chain calls.
     - _Requirements: foundational for 1.x, 2.x, 3.x, 6.x, 8.x; Design: "Data Ingestion Strategy", "Testing Strategy"_
-  - [ ] 4.2 Implement the concrete Solana adapters behind the same interfaces (each with an injected client)
+  - [x] 4.2 Implement the concrete Solana adapters behind the same interfaces (each with an injected client)
     - `MoralisAdapter` (**PRIMARY**) → implements `MarketDataProvider` (PRIMARY: token metadata +
       batch metadata, market metrics/prices, swaps & pairs, search/discovery), `ChainDataProvider`
       (PRIMARY: holders, swaps, wallet/portfolio), `ContractInspectorProvider` risk inputs (PRIMARY
@@ -139,7 +141,7 @@ running system, with no orphaned code:
       implementation, while their live/network behavior is exercised by thin adapter unit tests (4.4)
       and business logic keeps using the in-memory fakes (4.1).
     - _Requirements: 1.1, 2.4, 2.5, 3.1-3.3, 3.6, 4.1-4.3, 6.1, 6.2, 6.4, 6.5, 8.1; Design: "External Integrations", "Per-Integration Details", "Provider-selection / fallback strategy"_
-  - [ ] 4.3 Implement the per-provider rate limiter fronting each adapter
+  - [x] 4.3 Implement the per-provider rate limiter fronting each adapter
     - Implement a reusable token-bucket/rate limiter wrapping each adapter call. Front the **Moralis**
       adapter (primary) with its limiter budgeting by Moralis **compute units (CU)** per endpoint
       (token metadata **10** / batch metadata **100**, token analytics **80**, Token Score **100**,
@@ -150,7 +152,7 @@ running system, with no orphaned code:
       for tight polling of those events. DexScreener limits (~300/min token/pair, ~60/min
       profiles/boosts) apply **only when the DexScreener fallback is active**; GoPlus per its plan.
     - _Requirements: supports 1.7, 1.10; Design: "Concurrency", "Rate Limits & Real-Time Strategy"_
-  - [ ]* 4.4 Write adapter unit tests with mocked HTTP/RPC clients
+  - [x]* 4.4 Write adapter unit tests with mocked HTTP/RPC clients
     - Verify request batching, response-to-model mapping, error/timeout typing, and rate-limiter
       behavior using mocked clients (no real network/chain calls). Include **MoralisAdapter**
       mapping/batching tests across **both hosts** (`solana-gateway.moralis.io` token metadata + POST
@@ -162,7 +164,7 @@ running system, with no orphaned code:
       configured fallback on typed `ProviderError`/timeout/missing field; fallbacks disabled by default).
     - _Requirements: 1.1, 2.4, 2.5, 6.4, 8.1_
 
-  - [ ] 4.5 Implement the Moralis Solana Streams webhook intake
+  - [x] 4.5 Implement the Moralis Solana Streams webhook intake
     - Create the stream via `PUT /streams/solana` (at `https://api.moralis-streams.com`) filtered by
       the watched `mintAddresses`, and expose a **publicly reachable HTTPS webhook endpoint** to receive
       stream callbacks. Implement the **empty-body verification handshake** (respond HTTP 200 to the
@@ -174,8 +176,8 @@ running system, with no orphaned code:
       fakes in tests. **This replaces the former real-time webhook intake.**
     - _Requirements: 5.3, 5.4, 5.5; Design: "Rate Limits & Real-Time Strategy", "Per-Integration Details"_
 
-- [ ] 5. Implement Config_Manager
-  - [ ] 5.1 Implement parameter ranges, validation, defaults, persistence, and startup load
+- [x] 5. Implement Config_Manager
+  - [x] 5.1 Implement parameter ranges, validation, defaults, persistence, and startup load
     - Implement `PARAM_RANGES`, documented `DEFAULTS`, `save(input)` (reject non-numeric/missing and
       out-of-range while retaining the active config and identifying the offending parameter),
       `load_at_startup()` (latest persisted or defaults), and persistence-failure tolerance.
@@ -184,24 +186,24 @@ running system, with no orphaned code:
       `refresh_interval_s` (Data_Refresh_Interval, [5,300]) and the single `measurement_period_s`
       ([60,86400]) so all are validated as numeric, in-range parameters (Req 9.1).
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7; Design: "Config_Manager"_
-  - [ ]* 5.2 Write property test for configuration validation
+  - [x]* 5.2 Write property test for configuration validation
     - **Property 29: Configuration validation accepts exactly in-range numeric values**
     - **Validates: Requirements 9.1, 9.2, 9.3, 9.7**
-  - [ ]* 5.3 Write property test for persistence round-trip and latest-wins load
+  - [x]* 5.3 Write property test for persistence round-trip and latest-wins load
     - **Property 30: Configuration persistence round-trip and latest-wins**
     - **Validates: Requirements 9.4, 9.5**
-  - [ ]* 5.4 Write property test for documented defaults within allowed ranges
+  - [x]* 5.4 Write property test for documented defaults within allowed ranges
     - **Property 31: Documented defaults fall within their allowed ranges**
     - **Validates: Requirements 9.6**
-  - [ ]* 5.5 Write unit test for config persistence-failure indication
+  - [x]* 5.5 Write unit test for config persistence-failure indication
     - Verify active config retained and failure surfaced when the config repo fails.
     - _Requirements: 9.7_
 
-- [ ] 6. Checkpoint - foundation
+- [x] 6. Checkpoint - foundation
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Implement Security_Inspector
-  - [ ] 7.1 Implement contract issue detection and severity aggregation
+- [x] 7. Implement Security_Inspector
+  - [x] 7.1 Implement contract issue detection and severity aggregation
     - Implement `detect_issues` (MINTABLE, TRANSFER_DISABLE, FEE_MODIFIABLE, OWNERSHIP_PRIVILEGE),
       force `Critical` for arbitrary transfer-disable, and `evaluate` setting
       `rating = max_by_ordinal(issues.severity, default=None)`, recording each issue
@@ -218,7 +220,7 @@ running system, with no orphaned code:
       and the Critical trigger. The `Severity` ordering and `SecurityIssue` types are unchanged
       (Properties 1-4 mappings unchanged).
     - _Requirements: 2.1, 2.4, 2.5, 2.6, 2.7, 2.8; Design: "Security_Inspector", "Solana Security Semantics"_
-  - [ ] 7.2 Implement unverified/timeout handling and re-evaluation on state change
+  - [x] 7.2 Implement unverified/timeout handling and re-evaluation on state change
     - On contract unretrievable/timeout within the limit, assign `High` and set `unverified=true`;
       implement `on_state_change` re-evaluation.
     - Remap the Req 2.9 High trigger to Solana: raise `High` with `unverified=true` (issue type
@@ -227,48 +229,51 @@ running system, with no orphaned code:
       an active, unrenounced mint authority and freeze authority** (GoPlus optional as a corroborating
       fallback); Property 3 mapping is unchanged.
     - _Requirements: 2.9, 2.10; Design: "Security_Inspector", "Solana Security Semantics"_
-  - [ ]* 7.3 Write property test for severity membership
+  - [x]* 7.3 Write property test for severity membership
     - **Property 1: Severity rating is always a member of the ordered set**
     - **Validates: Requirements 2.1**
-  - [ ]* 7.4 Write property test for max-contributing-severity aggregation
+  - [x]* 7.4 Write property test for max-contributing-severity aggregation
     - **Property 2: Overall severity equals the maximum contributing severity**
     - **Validates: Requirements 2.5, 2.7, 2.4**
-  - [ ]* 7.5 Write property test for unverified-contract rating
+  - [x]* 7.5 Write property test for unverified-contract rating
     - **Property 3: Unverified or unretrievable contracts rate High**
     - **Validates: Requirements 2.9**
-  - [ ]* 7.6 Write unit tests for issue-record completeness and timestamp formatting
+  - [x]* 7.6 Write unit tests for issue-record completeness and timestamp formatting
     - _Requirements: 2.6, 2.8_
 
-- [ ] 8. Implement Backend_Analyzer
-  - [ ] 8.1 Implement wallet classification, distinct count, and bot percentage
+- [x] 8. Implement Backend_Analyzer
+  - [x] 8.1 Implement wallet classification, distinct count, bot percentage, and threshold alert
     - Compute distinct wallet count over the configurable window, classify each wallet as exactly one
       of BOT / NON_BOT, and compute `bot_pct = 100 * bot_txs / total_txs` (0 for empty window).
+    - When `bot_pct` exceeds the user-configured bot-percentage threshold, emit a bot-threshold alert
+      (dispatched via the Notifier, Task 17) identifying the Trading_Pair and the measured percentage,
+      delivered within 60 seconds of the threshold being exceeded.
     - Bot/sniper detection derives from **Moralis Token Swaps** (`walletAddress`, `transactionType`,
       `bought`/`sold`, `blockTimestamp`) plus **Streams pre/postTokenBalance deltas** with custom
       heuristics; there is **no dedicated sniper API**.
-    - _Requirements: 3.1, 3.2, 3.3, 3.4; Design: "Backend_Analyzer"_
-  - [ ] 8.2 Implement holder concentration, risk flag, persistence, and unavailable-data path
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5; Design: "Backend_Analyzer"_
+  - [x] 8.2 Implement holder concentration, risk flag, persistence, and unavailable-data path
     - Compute top-10 holder concentration in [0,100], set concentration-risk flag when threshold
       exceeded, persist analysis with pair_id + timestamp, and on provider unavailability record an
       error result while retaining prior results and producing no new classification.
     - _Requirements: 3.6, 3.7, 3.8, 3.9; Design: "Backend_Analyzer"_
-  - [ ]* 8.3 Write property test for distinct wallet count
+  - [x]* 8.3 Write property test for distinct wallet count
     - **Property 5: Distinct wallet count equals wallet-set cardinality**
     - **Validates: Requirements 3.1, 3.4**
-  - [ ]* 8.4 Write property test for classification partition
+  - [x]* 8.4 Write property test for classification partition
     - **Property 6: Wallet classification partitions all transacting wallets**
     - **Validates: Requirements 3.2**
-  - [ ]* 8.5 Write property test for bot-transaction percentage bounds/correctness
+  - [x]* 8.5 Write property test for bot-transaction percentage bounds/correctness
     - **Property 7: Bot transaction percentage is bounded and correct**
     - **Validates: Requirements 3.3, 3.4**
-  - [ ]* 8.6 Write property test for holder concentration and flagging
+  - [x]* 8.6 Write property test for holder concentration and flagging
     - **Property 8: Holder concentration is bounded and flagged correctly**
     - **Validates: Requirements 3.6, 3.7**
-  - [ ]* 8.7 Write unit tests for analysis-record persistence and data-unavailable path
+  - [x]* 8.7 Write unit tests for analysis-record persistence and data-unavailable path
     - _Requirements: 3.8, 3.9_
 
-- [ ] 9. Implement Metrics_Tracker
-  - [ ] 9.1 Implement metric recording (time-series append)
+- [x] 9. Implement Metrics_Tracker
+  - [x] 9.1 Implement metric recording (time-series append)
     - Append `LIQUIDITY`, `MARKET_CAP`, `FDV` per refresh and buy/sell counts and volumes per
       measurement period; each entry holds value-or-`MISSING`, second-precision timestamp, and
       pair_id; record audit provider/result/date when available; record `MISSING` when a value is
@@ -278,101 +283,102 @@ running system, with no orphaned code:
       only as an optional fallback (`provider = "GoPlus"`) when those inputs are unavailable, and leave
       the field null when no security metadata is available.
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.10; Design: "Metrics_Tracker", "Audit field clarification (Req 4.5)"_
-  - [ ] 9.2 Implement range query with validation
+  - [x] 9.2 Implement range query with validation
     - Implement `query_history` using the shared in-range primitive: reject `NOT_MONITORED`, reject
       inverted range with `INVALID_RANGE` (no mutation), and return ascending entries (possibly empty).
     - _Requirements: 4.6, 4.7, 4.8, 4.9; Design: "Metrics_Tracker"_
-  - [ ]* 9.3 Write property test for ascending-ordered series storage
+  - [x]* 9.3 Write property test for ascending-ordered series storage
     - **Property 12: Metric series is stored in ascending timestamp order**
     - **Validates: Requirements 4.4, 4.10**
-  - [ ]* 9.4 Write property test for in-range query correctness (covers metrics and audit)
+  - [x]* 9.4 Write property test for in-range query correctness (covers metrics and audit)
     - **Property 13: Range queries return exactly the in-range entries, ascending**
     - **Validates: Requirements 4.6, 4.9, 10.2, 10.3**
-  - [ ]* 9.5 Write property test for inverted-range rejection without mutation (covers metrics and audit)
+  - [x]* 9.5 Write property test for inverted-range rejection without mutation (covers metrics and audit)
     - **Property 14: Inverted time ranges are rejected without mutation**
     - **Validates: Requirements 4.7, 4.8, 10.4**
-  - [ ]* 9.6 Write unit tests for metric-recording fields and not-monitored query error
+  - [x]* 9.6 Write unit tests for metric-recording fields and not-monitored query error
     - _Requirements: 4.1-4.3, 4.5, 4.8_
 
-- [ ] 10. Implement Audit / persistence service
-  - [ ] 10.1 Implement append-only record with retry and retention enforcement
+- [x] 10. Implement Audit / persistence service
+  - [x] 10.1 Implement append-only record with retry and retention enforcement
     - Implement `record(action_type, pair_id, outcome)` with millisecond UTC timestamp, retry up to
       3 times, then write a `PERSISTENCE_FAILURE` record and continue; implement `query` (reusing the
       shared in-range/inverted-range logic) and `enforce_retention` (period 30-3650 days, default 30)
       deleting exactly records older than the period.
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7; Design: "Audit / Persistence Service"_
-  - [ ]* 10.2 Write property test for retention deletion boundary
+  - [x]* 10.2 Write property test for retention deletion boundary
     - **Property 15: Retention deletes exactly the records older than the period**
     - **Validates: Requirements 10.5, 10.6**
-  - [ ]* 10.3 Write unit tests for audit record content/precision and persistence-failure record
+  - [x]* 10.3 Write unit tests for audit record content/precision and persistence-failure record
     - _Requirements: 10.1, 10.7_
 
-- [ ] 11. Checkpoint - analysis and persistence
+- [x] 11. Checkpoint - analysis and persistence
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 12. Implement Signal_Engine
-  - [ ] 12.1 Implement entry scoring/eligibility and exit predicates
+- [x] 12. Implement Signal_Engine
+  - [x] 12.1 Implement entry scoring/eligibility and exit predicates
     - Compute entry score from security/wallet/market metrics at each Signal_Computation_Interval;
       mark eligible iff `entry_score >= entry_threshold AND severity <= max_severity`; emit `RUG_PULL`
       exit iff liquidity drop% between consecutive snapshots exceeds the rug-pull threshold; emit
       `DUMP` exit iff `sell_volume/buy_volume` (buy_volume > 0) over the single Measurement_Period
       exceeds the dump threshold; record signals with contributing metrics + timestamp.
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.6; Design: "Signal_Engine"_
-  - [ ] 12.2 Implement stale/missing-metrics skip path
+  - [x] 12.2 Implement stale/missing-metrics skip path
     - When required metrics are stale/unavailable, skip computation, record the skipped condition,
       and retain previously generated signals.
     - _Requirements: 5.7; Design: "Signal_Engine"_
-  - [ ]* 12.3 Write property test for entry eligibility predicate
+  - [x]* 12.3 Write property test for entry eligibility predicate
     - **Property 16: Entry eligibility predicate**
     - **Validates: Requirements 5.2**
-  - [ ]* 12.4 Write property test for rug-pull exit predicate
+  - [x]* 12.4 Write property test for rug-pull exit predicate
     - **Property 17: Rug-pull exit predicate**
     - **Validates: Requirements 5.3**
-  - [ ]* 12.5 Write property test for dump exit predicate
+  - [x]* 12.5 Write property test for dump exit predicate
     - **Property 18: Dump exit predicate**
     - **Validates: Requirements 5.4**
-  - [ ]* 12.6 Write unit tests for signal record content and skip-on-stale path
+  - [x]* 12.6 Write unit tests for signal record content and skip-on-stale path
     - _Requirements: 5.6, 5.7_
 
-- [ ] 13. Implement Risk_Manager (safety-critical)
-  - [ ] 13.1 Implement pre-trade buy approval predicate
+- [x] 13. Implement Risk_Manager (safety-critical)
+  - [x] 13.1 Implement pre-trade buy approval predicate
     - Implement `approve_buy` returning approve/reject within the decision bound: reject
       `SEVERITY_EXCEEDED`, `TOTAL_EXPOSURE_EXCEEDED`, or `PER_TOKEN_EXCEEDED`; approve only when
       resulting per-token size <= limit AND resulting total exposure <= limit AND severity <= max.
       Rejections must leave all positions and total exposure unchanged.
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.7; Design: "Risk_Manager"_
-  - [ ] 13.2 Implement stop-loss monitoring and non-retroactive profile updates
+  - [x] 13.2 Implement stop-loss monitoring and non-retroactive profile updates
     - Implement `monitor_stop_loss` (request full-position sell when unrealized loss% >= stop-loss%)
       and `update_profile` so updates apply only to decisions initiated after completion.
     - _Requirements: 7.5, 7.6; Design: "Risk_Manager", "Concurrency / shared-state safety"_
-  - [ ]* 13.3 Write property test for risk approval predicate
+  - [x]* 13.3 Write property test for risk approval predicate
     - **Property 19: Risk approval predicate**
     - **Validates: Requirements 7.2, 7.3, 7.4, 7.7**
-  - [ ]* 13.4 Write property test for rejected-order immutability
+  - [x]* 13.4 Write property test for rejected-order immutability
     - **Property 20: Rejected orders never change positions**
     - **Validates: Requirements 7.3, 7.4**
-  - [ ]* 13.5 Write property test for stop-loss full-position sell trigger
+  - [x]* 13.5 Write property test for stop-loss full-position sell trigger
     - **Property 21: Stop-loss triggers a full-position sell**
     - **Validates: Requirements 7.5**
-  - [ ]* 13.6 Write property test for non-retroactive profile updates
+  - [x]* 13.6 Write property test for non-retroactive profile updates
     - **Property 22: Risk-profile updates do not retroactively alter decisions**
     - **Validates: Requirements 7.6**
 
-- [ ] 14. Implement Authorization_Manager (safety-critical)
-  - Implement `connect_wallet` (verify within bound -> enable trading + record `ENABLED`; else stay
-    monitoring-only + surface error + record `FAILED`), `revoke` (disable trading within bound, keep
-    monitoring, record `REVOKED`), and `trading_enabled()` defaulting false until an authorized
-    wallet is connected. Record every status change with a timestamp.
-  - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6; Design: "Authorization_Manager"_
-  - [ ]* 14.1 Write unit tests for auth status-change records and monitoring-retained-after-revoke
+- [x] 14. Implement Authorization_Manager (safety-critical)
+  - [x] 14.1 Implement wallet connect/verify, revoke, and the trading-enabled gate
+    - Implement `connect_wallet` (verify within bound -> enable trading + record `ENABLED`; else stay
+      monitoring-only + surface error + record `FAILED`), `revoke` (disable trading within bound, keep
+      monitoring, record `REVOKED`), and `trading_enabled()` defaulting false until an authorized
+      wallet is connected. Record every status change with a timestamp.
+    - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6; Design: "Authorization_Manager"_
+  - [x]* 14.2 Write unit tests for auth status-change records and monitoring-retained-after-revoke
     - _Requirements: 11.5, 11.6_
 
-- [ ] 15. Implement Trade_Executor (safety-critical)
-  - [ ] 15.1 Implement the monitoring-only gate and severity-presence guard
+- [x] 15. Implement Trade_Executor (safety-critical)
+  - [x] 15.1 Implement the monitoring-only gate and severity-presence guard
     - Submit no order unless `authz.trading_enabled()` AND automated trading is enabled (otherwise
       send a recommendation); reject any trade for a token with no assigned Severity_Rating.
     - _Requirements: 2.3, 6.1, 6.2, 6.3, 11.3; Design: "Trade_Executor", "Trade Execution with Risk Approval"_
-  - [ ] 15.2 Implement order submission with slippage, confirmation, and failure handling
+  - [x] 15.2 Implement order submission with slippage, confirmation, and failure handling
     - Attach max slippage tolerance; submit via `TradeVenueProvider`; on confirmation record
       type/price/qty/fee/tx_id + timestamp and update position; on submission failure, confirmation
       timeout, or executed-slippage breach, cancel/record reason and leave Position and wallet balance
@@ -384,45 +390,45 @@ running system, with no orphaned code:
       the Telegram bot token are supplied from secrets/config. The signer path is reachable only when an
       authorized wallet is connected AND automated trading is enabled (Property 23).
     - _Requirements: 6.4, 6.5, 6.6, 6.7, 6.8; Design: "Trade_Executor", "Signer / Key Handling", "Security Considerations"_
-  - [ ]* 15.3 Write property test for trades requiring an assigned severity rating
+  - [x]* 15.3 Write property test for trades requiring an assigned severity rating
     - **Property 4: Trades require an assigned severity rating**
     - **Validates: Requirements 2.3**
-  - [ ]* 15.4 Write property test for monitoring-only safety gate
+  - [x]* 15.4 Write property test for monitoring-only safety gate
     - **Property 23: Monitoring-only safety - no order without authorization and enablement**
     - **Validates: Requirements 6.3, 11.2, 11.3, 11.4**
-  - [ ]* 15.5 Write property test for slippage attachment on submitted orders
+  - [x]* 15.5 Write property test for slippage attachment on submitted orders
     - **Property 24: Submitted orders carry the configured slippage tolerance**
     - **Validates: Requirements 6.4**
-  - [ ]* 15.6 Write property test for no-side-effect on non-confirmed orders
+  - [x]* 15.6 Write property test for no-side-effect on non-confirmed orders
     - **Property 25: Non-confirmed orders never change position or balance**
     - **Validates: Requirements 6.6, 6.7, 6.8**
-  - [ ]* 15.7 Write unit test for order confirmation record fields
+  - [x]* 15.7 Write unit test for order confirmation record fields
     - _Requirements: 6.5_
-  - [ ] 15.8 Implement the in-flight / idempotency guard
+  - [x] 15.8 Implement the in-flight / idempotency guard
     - Enforce at most one in-flight order per Trading_Pair via the `InFlightRegistry`: submit no new
       buy while a Position is open or an order is in flight for that pair, and no duplicate sell while
       a sell is in flight (suppress with `SUPPRESSED_DUPLICATE_ENTRY` / duplicate-sell reason and make
       no state change); set the in-flight marker on order submit and clear it exactly when the order
       reaches a terminal status (`CONFIRMED`, `CANCELLED`, `FAILED`, `TIMED_OUT`).
     - _Requirements: 12.1, 12.2, 12.3, 12.4; Design: "Trade_Executor", "Concurrency"_
-  - [ ] 15.9 Implement position sizing and balance-sufficiency check
+  - [x] 15.9 Implement position sizing and balance-sufficiency check
     - Derive the prepared buy size from `RiskProfile.per_order_size` (`FIXED_QUOTE` |
       `PERCENT_BALANCE`) and cap it so the resulting per-Token position and total exposure stay within
       the Risk_Profile limits; if available Quote_Asset balance is insufficient to fund the prepared
       order, submit no order, record an insufficient-balance reason, and notify.
     - _Requirements: 6.9, 6.10, 7.1, 7.2; Design: "Trade_Executor"_
-  - [ ]* 15.10 Write property test for trade idempotency and in-flight order control
+  - [x]* 15.10 Write property test for trade idempotency and in-flight order control
     - **Property 32: Trade idempotency and in-flight order control**
     - **Validates: Requirements 12.1, 12.2, 12.3, 12.4**
-  - [ ]* 15.11 Write property test for order sizing and balance sufficiency
+  - [x]* 15.11 Write property test for order sizing and balance sufficiency
     - **Property 34: Order sizing and balance sufficiency**
     - **Validates: Requirements 6.9, 6.10**
 
-- [ ] 16. Checkpoint - decision and safety-critical components
+- [x] 16. Checkpoint - decision and safety-critical components
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 17. Implement Notifier
-  - [ ] 17.1 Implement multi-channel dispatch, retry, quiet hours, and confirmation/severity alerts
+- [x] 17. Implement Notifier
+  - [x] 17.1 Implement multi-channel dispatch, retry, quiet hours, and confirmation/severity alerts
     - Dispatch each alert to every enabled channel; per channel attempt up to 4 times (>=5s apart),
       recording final per-channel delivered/undelivered status and surfacing undelivered without
       blocking other channels; during quiet hours always deliver Critical alerts AND Exit_Signal
@@ -430,20 +436,20 @@ running system, with no orphaned code:
       alerts; support order-confirmation messages, High/Critical severity alerts, and the configurable
       exit-signal retry budget (1-10, default 3).
     - _Requirements: 5.8, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6; Design: "Notifier", "Alerting"_
-  - [ ]* 17.2 Write property test for bounded retry with recorded final status
+  - [x]* 17.2 Write property test for bounded retry with recorded final status
     - **Property 26: Bounded retry with recorded final status**
     - **Validates: Requirements 5.8, 8.4, 8.5**
-  - [ ]* 17.3 Write property test for dispatch to every enabled channel
+  - [x]* 17.3 Write property test for dispatch to every enabled channel
     - **Property 27: Alerts are dispatched to every enabled channel**
     - **Validates: Requirements 8.3, 8.5**
-  - [ ]* 17.4 Write property test for quiet-hours suppression preserving Critical and held-position exits
+  - [x]* 17.4 Write property test for quiet-hours suppression preserving Critical and held-position exits
     - **Property 28: Quiet-hours suppression preserves Critical and held-position Exit_Signal alerts**
     - **Validates: Requirements 8.6**
-  - [ ]* 17.5 Write unit test for confirmation-message content
+  - [x]* 17.5 Write unit test for confirmation-message content
     - _Requirements: 8.1_
 
-- [ ] 18. Implement Data_Ingestor and Monitoring Orchestrator
-  - [ ] 18.1 Implement Data_Ingestor watchlist add/resolve, refresh retry, and discovery scan
+- [x] 18. Implement Data_Ingestor and Monitoring Orchestrator
+  - [x] 18.1 Implement Data_Ingestor watchlist add/resolve, refresh retry, and discovery scan
     - `add_token_to_watchlist` resolves pairs (reject `PAIR_NOT_FOUND` naming the token) and triggers
       security evaluation; `refresh` resets failure count on success, increments on failure while
       serving last-good, and triggers a stale notification at the 5th consecutive failure;
@@ -453,24 +459,24 @@ running system, with no orphaned code:
       (`GET /token/{net}/exchange/{exchange}/new`, filtered to `createdAt` < 24h) plus **token-search**;
       it does **NOT** use the deprecated discovery/filtered-tokens endpoint.
     - _Requirements: 1.1, 1.2, 1.5, 1.6, 1.7, 1.8, 1.9; Design: "Data_Ingestor"_
-  - [ ] 18.2 Implement Orchestrator concurrency cap, loop lifecycle, and per-tick pipeline
+  - [x] 18.2 Implement Orchestrator concurrency cap, loop lifecycle, and per-tick pipeline
     - Maintain the bounded active-pair registry (atomic add: succeed iff count < 200, never exceed
       200; reject with `CONCURRENCY_LIMIT`); `remove_pair` stops the loop while repositories retain
       data; `tick` runs ingest -> analyze -> track -> signal per refresh interval with per-task
       isolation/timeouts.
     - _Requirements: 1.3, 1.4, 1.10, 1.11; Design: "Monitoring Orchestrator", "Concurrency"_
-  - [ ]* 18.3 Write property test for the concurrency cap
+  - [x]* 18.3 Write property test for the concurrency cap
     - **Property 9: Concurrency cap is never exceeded**
     - **Validates: Requirements 1.10, 1.11**
-  - [ ]* 18.4 Write property test for discovery adding only recent, matching pairs
+  - [x]* 18.4 Write property test for discovery adding only recent, matching pairs
     - **Property 10: Discovery adds only recent, matching pairs**
     - **Validates: Requirements 1.5, 1.6**
-  - [ ]* 18.5 Write property test for fetch-failure last-good retention and bounded retries
+  - [x]* 18.5 Write property test for fetch-failure last-good retention and bounded retries
     - **Property 11: Fetch failures retain last-good data and bound retries**
     - **Validates: Requirements 1.8, 1.9**
-  - [ ]* 18.6 Write unit tests for pair-not-found rejection and remove-retains-data
+  - [x]* 18.6 Write unit tests for pair-not-found rejection and remove-retains-data
     - _Requirements: 1.2, 1.3, 1.4_
-  - [ ] 18.7 Derive the effective market-data poll interval from the rate-limiter budget
+  - [x] 18.7 Derive the effective market-data poll interval from the rate-limiter budget
     - Using the per-provider rate limiter (Task 4.3), compute an effective market-data poll interval
       from the available budget and the active pair count, honoring the configured >=5s minimum
       (Req 1.7) as a per-pair floor and supporting >=200 active pairs (Req 1.10); the budget now
@@ -478,14 +484,14 @@ running system, with no orphaned code:
       snapshots into **batched Moralis POST batch-metadata lookups** rather than one request per pair
       per tick (DexScreener batching applies only when its fallback is active).
     - _Requirements: 1.7, 1.10; Design: "Rate Limits & Real-Time Strategy", "Concurrency"_
-  - [ ] 18.8 Wire the Moralis Solana Streams intake into the Signal_Engine path
+  - [x] 18.8 Wire the Moralis Solana Streams intake into the Signal_Engine path
     - Consume the **Moralis Solana Streams** webhook intake (Task 4.5) as the **PRIMARY real-time
       intake** and route latency-sensitive liquidity-removal (rug) and dump events (derived from
       `preTokenBalances`/`postTokenBalances` deltas) into the Signal_Engine exit path (Req 5.3/5.4) and
       the <=5s exit alert (Req 5.5), rather than tight polling of the Moralis CU-budgeted market data;
       inject the stream/webhook client so the routing is exercised with in-memory fakes in tests.
     - _Requirements: 5.3, 5.4, 5.5; Design: "Rate Limits & Real-Time Strategy", "Per-Integration Details"_
-  - [ ] 18.9 Implement startup state recovery
+  - [x] 18.9 Implement startup state recovery
     - Add `recover_on_startup()` that, before any trade-affecting operation, restores the persisted
       open Positions and active Watchlist: resume stop-loss and exit-signal evaluation for each
       restored Position and resume monitoring of the restored Watchlist pairs subject to the 200-pair
@@ -494,12 +500,12 @@ running system, with no orphaned code:
       unreadable, start in monitoring-only mode, surface a recovery-failure indication, and submit no
       orders until resolved.
     - _Requirements: 13.1, 13.2, 13.3, 13.4; Design: "Monitoring Orchestrator", "recover_on_startup"_
-  - [ ]* 18.10 Write property test for startup state recovery
+  - [x]* 18.10 Write property test for startup state recovery
     - **Property 33: Startup state recovery**
     - **Validates: Requirements 13.1, 13.2, 13.3, 13.4**
 
-- [ ] 19. Integration and wiring
-  - [ ] 19.1 Wire all components into a runnable Agent with dependency injection
+- [x] 19. Integration and wiring
+  - [x] 19.1 Wire all components into a runnable Agent with dependency injection
     - Compose Config_Manager, repositories, providers, analyzers, Signal_Engine, Risk_Manager,
       Authorization_Manager, Trade_Executor, Notifier, and Orchestrator; load config at startup
       (defaults when none persisted); boot in monitoring-only mode with automated trading disabled.
@@ -520,32 +526,32 @@ running system, with no orphaned code:
       into the Trade_Executor and supply the `Per_Order_Size` (`RiskProfile.per_order_size`)
       configuration used for order sizing.
     - _Requirements: 9.5, 9.6, 11.3, 12.1-12.4, 13.1-13.4, 6.9; Design: "Architecture", "External Integrations", "Security Considerations"_
-  - [ ]* 19.2 Write integration test for watchlist add -> monitoring begins
+  - [x]* 19.2 Write integration test for watchlist add -> monitoring begins
     - Add a resolvable token via a faked market provider; assert monitoring starts and remove stops it.
     - _Requirements: 1.1, 1.3_
-  - [ ]* 19.3 Write integration test for the end-to-end authorized buy/sell happy path
+  - [x]* 19.3 Write integration test for the end-to-end authorized buy/sell happy path
     - With a faked venue: authorize wallet, enable trading, drive an eligible entry through Risk_Manager
       to a confirmed buy, then an exit signal to a confirmed sell, asserting confirmation notifications.
     - _Requirements: 6.1, 6.2, 8.1_
-  - [ ]* 19.4 Write integration tests for cadence and timing behaviors
+  - [x]* 19.4 Write integration tests for cadence and timing behaviors
     - Discovery/refresh cadence, contract re-evaluation on state change, signal cadence, severity and
       bot-percentage alert timing, exit-signal alert timing, and stop-loss evaluation cadence using
       faked providers and a controllable clock.
     - _Requirements: 1.5, 1.7, 2.2, 2.10, 3.5, 5.1, 5.5, 7.5, 8.2_
-  - [ ]* 19.5 Write capacity smoke test for 200 concurrent monitoring loops
+  - [x]* 19.5 Write capacity smoke test for 200 concurrent monitoring loops
     - Register 200 pairs and assert the registry stays responsive and the cap holds.
     - _Requirements: 1.10_
-  - [ ]* 19.6 Write integration test for restart state recovery
+  - [x]* 19.6 Write integration test for restart state recovery
     - Persist open Positions and an active Watchlist, restart the Agent, and assert recovery restores
       exactly those Positions (with stop-loss/exit evaluation resumed) and resumes monitoring of those
       pairs before any trade-affecting operation.
     - _Requirements: 13.1, 13.2, 13.3_
-  - [ ]* 19.7 Write integration test for duplicate-order suppression
+  - [x]* 19.7 Write integration test for duplicate-order suppression
     - With a faked venue and an in-flight/open Position, assert a second buy/sell for the same pair is
       suppressed with no state change and the in-flight marker clears on terminal status.
     - _Requirements: 12.1, 12.2, 12.3, 12.4_
 
-- [ ] 20. Final checkpoint - full suite
+- [x] 20. Final checkpoint - full suite
   - Ensure all tests pass (all 34 property tests at >= 100 iterations, plus unit and integration
     tests), ask the user if questions arise.
 
@@ -553,67 +559,44 @@ running system, with no orphaned code:
 
 ## Task Dependency Graph
 
-```mermaid
-graph TD
-    T1[1. Project setup and Result/errors]
-    T2[2. Data models and enums]
-    T3[3. Repositories abstractions and in-memory]
-    T4[4. Provider interfaces, fakes, and Solana adapters: primary Moralis + real-time/fallback]
-    T5[5. Config_Manager]
-    T6[6. Checkpoint: foundation]
-    T7[7. Security_Inspector]
-    T8[8. Backend_Analyzer]
-    T9[9. Metrics_Tracker]
-    T10[10. Audit/persistence service]
-    T11[11. Checkpoint: analysis]
-    T12[12. Signal_Engine]
-    T13[13. Risk_Manager]
-    T14[14. Authorization_Manager]
-    T15[15. Trade_Executor]
-    T16[16. Checkpoint: decision and safety]
-    T17[17. Notifier]
-    T18[18. Data_Ingestor and Orchestrator]
-    T19[19. Integration and wiring]
-    T20[20. Final checkpoint]
-
-    T1 --> T2 --> T3 --> T4 --> T5 --> T6
-    T2 --> T5
-    T6 --> T7
-    T6 --> T8
-    T6 --> T9
-    T6 --> T10
-    T3 --> T9
-    T3 --> T10
-    T4 --> T7
-    T4 --> T8
-    T7 --> T11
-    T8 --> T11
-    T9 --> T11
-    T10 --> T11
-    T11 --> T12
-    T7 --> T12
-    T8 --> T12
-    T9 --> T12
-    T12 --> T15
-    T13 --> T15
-    T14 --> T15
-    T11 --> T13
-    T11 --> T14
-    T13 --> T16
-    T14 --> T16
-    T15 --> T16
-    T16 --> T17
-    T16 --> T18
-    T12 --> T18
-    T7 --> T18
-    T8 --> T18
-    T9 --> T18
-    T17 --> T19
-    T18 --> T19
-    T15 --> T19
-    T5 --> T19
-    T19 --> T20
+```json
+{
+  "waves": [
+    { "id": 0, "tasks": ["1.1"] },
+    { "id": 1, "tasks": ["2.1", "2.2"] },
+    { "id": 2, "tasks": ["2.3", "3.1", "5.1"] },
+    { "id": 3, "tasks": ["4.1", "5.2", "5.3", "5.4", "5.5"] },
+    { "id": 4, "tasks": ["4.2"] },
+    { "id": 5, "tasks": ["4.3", "4.5"] },
+    { "id": 6, "tasks": ["4.4", "7.1", "8.1", "9.1", "10.1"] },
+    { "id": 7, "tasks": ["7.2", "8.2", "9.2"] },
+    { "id": 8, "tasks": ["7.3", "7.4", "7.5", "7.6", "8.3", "8.4", "8.5", "8.6", "8.7", "9.3", "9.4", "9.5", "9.6", "10.2", "10.3"] },
+    { "id": 9, "tasks": ["12.1", "13.1", "14.1"] },
+    { "id": 10, "tasks": ["12.2", "13.2", "14.2"] },
+    { "id": 11, "tasks": ["12.3", "12.4", "12.5", "12.6", "13.3", "13.4", "13.5", "13.6"] },
+    { "id": 12, "tasks": ["15.1", "17.1"] },
+    { "id": 13, "tasks": ["15.2", "17.2", "17.3", "17.4", "17.5"] },
+    { "id": 14, "tasks": ["15.8"] },
+    { "id": 15, "tasks": ["15.9"] },
+    { "id": 16, "tasks": ["15.3", "15.4", "15.5", "15.6", "15.7", "15.10", "15.11"] },
+    { "id": 17, "tasks": ["18.1", "18.2"] },
+    { "id": 18, "tasks": ["18.7"] },
+    { "id": 19, "tasks": ["18.8"] },
+    { "id": 20, "tasks": ["18.9"] },
+    { "id": 21, "tasks": ["18.3", "18.4", "18.5", "18.6", "18.10"] },
+    { "id": 22, "tasks": ["19.1"] },
+    { "id": 23, "tasks": ["19.2", "19.3", "19.4", "19.5", "19.6", "19.7"] }
+  ]
+}
 ```
+
+> **Scheduling notes.** Waves run in order; tasks within a wave are independent and may run in
+> parallel. Setup/foundation (models, repos, provider interfaces/adapters, config) occupy the early
+> waves; analysis, decision, and safety-critical components follow; integration and end-to-end tests
+> are last. Implementation sub-tasks that edit the same component module (e.g. Trade_Executor 15.1 ->
+> 15.2 -> 15.8 -> 15.9, and Orchestrator 18.2 -> 18.7 -> 18.8 -> 18.9) are placed in separate waves to
+> avoid write conflicts. Test sub-tasks (including optional `*` tests) are scheduled after the code
+> they exercise.
 
 ---
 
