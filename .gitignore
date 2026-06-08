@@ -1,0 +1,25 @@
+# Virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Egg info
+*.egg-info/
+
+# Environment secrets - NEVER commit
+.env
+
+# IDE
+.vscode/
+*.swp
+
+# Testing artifacts
+.hypothesis/
+.pytest_cache/
+
+# OS files
+Thumbs.db
+.DS_Store
