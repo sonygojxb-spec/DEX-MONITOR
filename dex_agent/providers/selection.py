@@ -101,10 +101,10 @@ class FallbackMarketDataProvider(MarketDataProvider):
             self._should,
         )
 
-    def fetch_pair_snapshot(self, pair_id: str) -> Result[PairSnapshot]:
+    def fetch_pair_snapshot(self, pair_id: str, *, token_address: str | None = None) -> Result[PairSnapshot]:
         return _select(
-            lambda: self._primary.fetch_pair_snapshot(pair_id),
-            (lambda: self._fallback.fetch_pair_snapshot(pair_id))
+            lambda: self._primary.fetch_pair_snapshot(pair_id, token_address=token_address),
+            (lambda: self._fallback.fetch_pair_snapshot(pair_id, token_address=token_address))
             if self._fallback
             else None,
             self._should,

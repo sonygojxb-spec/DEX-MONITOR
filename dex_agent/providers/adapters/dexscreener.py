@@ -100,7 +100,7 @@ class DexScreenerAdapter(MarketDataProvider):
         now = self._clock()
         return Ok([self._to_snapshot(r, now) for r in rows if isinstance(r, Mapping)])
 
-    def fetch_pair_snapshot(self, pair_id: str) -> Result[PairSnapshot]:
+    def fetch_pair_snapshot(self, pair_id: str, *, token_address: str | None = None) -> Result[PairSnapshot]:
         result = self._get(f"/latest/dex/pairs/{self._chain}/{pair_id}")
         if result.is_err():
             return result

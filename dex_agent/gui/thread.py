@@ -314,7 +314,8 @@ class AgentThread:
             try:
                 pair_result = repos.pairs.get(pair_id)
                 if pair_result.is_ok():
-                    token_name = pair_result.value.token.name
+                    name = pair_result.value.token.name
+                    token_name = name if name else pair_result.value.token.symbol or pair_id[:12]
             except Exception:
                 pass
 
@@ -341,9 +342,16 @@ class AgentThread:
             except Exception:
                 pass
 
-            # Liquidity — not directly available from a single repo call
-            # without a PairSnapshot. Use "-" as default.
+            # Liquidity from the latest PairSnapshot (available via the
+            # ingestor's last_good cache or the metrics repository).
             liquidity = "-"
+            try:
+                ingestor = self._agent.data_ingestor
+                last = ingestor.last_good(pair_id)
+                if last is not None:
+                    liquidity = f"${last.liquidity:,.0f}"
+            except Exception:
+                pass
 
             # Signal from SignalRepository (latest of either type)
             signal_type = "-"

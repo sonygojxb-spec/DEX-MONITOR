@@ -264,9 +264,11 @@ class MarketDataProvider(ABC):
         """
 
     @abstractmethod
-    def fetch_pair_snapshot(self, pair_id: str) -> Result[PairSnapshot]:
+    def fetch_pair_snapshot(self, pair_id: str, *, token_address: str | None = None) -> Result[PairSnapshot]:
         """Fetch the latest market snapshot for ``pair_id`` (Req 1.7, 4.1-4.3).
 
+        When ``token_address`` is provided, adapters that key their analytics
+        endpoints by token mint (e.g. Moralis) use it instead of ``pair_id``.
         Returns ``Err(ProviderError)`` / ``Err(TimedOut)`` on failure.
         """
 

@@ -100,7 +100,17 @@ def main() -> None:
         )
         return
 
-    # 3. Launch the DEXMonitorApp
+    # 3. Seed the watchlist from SEED_TOKENS env var (same as CLI entry point)
+    seed = os.environ.get("SEED_TOKENS", "").strip()
+    if seed:
+        from dex_agent.models import Network
+        for mint in [m.strip() for m in seed.split(",") if m.strip()]:
+            try:
+                agent.add_token(mint, Network.SOLANA)
+            except Exception:
+                pass  # Non-fatal: log in alerts once GUI is up
+
+    # 4. Launch the DEXMonitorApp
     # DEXMonitorApp will be implemented in task 11.1; import conditionally
     try:
         from dex_agent.gui.app import DEXMonitorApp

@@ -131,13 +131,22 @@ class MoralisAdapter(MarketDataProvider, ChainDataProvider, ContractInspectorPro
         if not rows:
             return Err(NotFound("no pairs for token", identifier=token_address))
         now = self._clock()
-        snapshots = [self._pair_to_snapshot(row, now) for row in rows]
+        snapshots = [self._pair_to_snapshot(row, now, token_address=token_address) for row in rows]
         return Ok(snapshots)
 
-    def _pair_to_snapshot(self, row: Mapping[str, Any], now: datetime) -> PairSnapshot:
+    def _pair_to_snapshot(self, row: Mapping[str, Any], now: datetime, *, token_address: str | None = None) -> PairSnapshot:
         pair_id = str(
             first_present(row, "pairAddress", "pairId", "pair_address", "address") or ""
         )
+        # Derive the token_address from the row if not explicitly provided.
+        # Moralis pair responses may include the token mint under various keys.
+        resolved_token = token_address or str(
+            first_present(row, "tokenAddress", "token_address", "mint", "baseToken") or ""
+        ) or None
+        # For Pump.fun discovery: if no pair address is available, use the token
+        # mint as the pair_id (since Moralis endpoints are mint-keyed anyway).
+        if not pair_id and resolved_token:
+            pair_id = resolved_token
         return PairSnapshot(
             pair_id=pair_id,
             price=to_decimal(first_present(row, "usdPrice", "priceUsd"), to_decimal("0")) or to_decimal("0"),
@@ -149,15 +158,20 @@ class MoralisAdapter(MarketDataProvider, ChainDataProvider, ContractInspectorPro
             buy_volume=to_decimal(first_present(row, "buyVolumeUsd"), to_decimal("0")) or to_decimal("0"),
             sell_volume=to_decimal(first_present(row, "sellVolumeUsd"), to_decimal("0")) or to_decimal("0"),
             fetched_at=now,
+            token_address=resolved_token,
         )
 
-    def fetch_pair_snapshot(self, pair_id: str) -> Result[PairSnapshot]:
-        # On Solana the snapshot key is the token mint; analytics + price are
-        # keyed by the token address. ``pair_id`` carries that mint address.
-        analytics_res = self._get_deep(f"/tokens/{pair_id}/analytics")
+    def fetch_pair_snapshot(self, pair_id: str, *, token_address: str | None = None) -> Result[PairSnapshot]:
+        # On Solana the Moralis analytics + price endpoints are keyed by the
+        # token mint address, NOT the pair/pool address. The caller should pass
+        # ``token_address`` when available; if not provided we fall back to using
+        # ``pair_id`` (which works when pair_id IS the token mint, e.g. for
+        # tokens that use the mint as their primary key).
+        mint = token_address or pair_id
+        analytics_res = self._get_deep(f"/tokens/{mint}/analytics")
         if analytics_res.is_err():
             return analytics_res
-        price_res = self._get_solana(f"/token/{self._net}/{pair_id}/price")
+        price_res = self._get_solana(f"/token/{self._net}/{mint}/price")
         if price_res.is_err():
             return price_res
         analytics = analytics_res.value if isinstance(analytics_res.value, Mapping) else {}
@@ -174,6 +188,7 @@ class MoralisAdapter(MarketDataProvider, ChainDataProvider, ContractInspectorPro
             buy_volume=to_decimal(self._bucket_value(analytics.get("totalBuyVolume")), to_decimal("0")) or to_decimal("0"),
             sell_volume=to_decimal(self._bucket_value(analytics.get("totalSellVolume")), to_decimal("0")) or to_decimal("0"),
             fetched_at=now,
+            token_address=mint,
         )
         return Ok(snapshot)
 
@@ -193,7 +208,27 @@ class MoralisAdapter(MarketDataProvider, ChainDataProvider, ContractInspectorPro
             created = parse_timestamp(first_present(row, "createdAt", "created_at"), now)
             if created < since:
                 continue
-            out.append(self._pair_to_snapshot(row, now))
+            # The Pump.fun new-tokens response includes the token mint address.
+            # Derive it from the row and pass it to _pair_to_snapshot.
+            token_mint = str(
+                first_present(row, "mint", "tokenAddress", "token_address", "address") or ""
+            ) or None
+            snapshot = self._pair_to_snapshot(row, now, token_address=token_mint)
+            # Override fetched_at with the actual creation time for recency checks.
+            snapshot = PairSnapshot(
+                pair_id=snapshot.pair_id,
+                price=snapshot.price,
+                liquidity=snapshot.liquidity,
+                market_cap=snapshot.market_cap,
+                fdv=snapshot.fdv,
+                buy_count=snapshot.buy_count,
+                sell_count=snapshot.sell_count,
+                buy_volume=snapshot.buy_volume,
+                sell_volume=snapshot.sell_volume,
+                fetched_at=created,
+                token_address=token_mint or snapshot.token_address,
+            )
+            out.append(snapshot)
         return Ok(out)
 
     # -- ChainDataProvider ----------------------------------------------

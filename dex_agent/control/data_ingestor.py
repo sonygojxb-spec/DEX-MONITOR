@@ -44,6 +44,7 @@ from dex_agent.errors import AgentError, NotFound
 from dex_agent.models import (
     Network,
     PairSnapshot,
+    Severity,
     Token,
     TradingPair,
     WatchlistEntry,
@@ -167,6 +168,9 @@ class DataIngestor:
         self._failure_counts: dict[str, int] = {}
         self._last_good: dict[str, PairSnapshot] = {}
         self._stale_notified: set[str] = set()
+        # Mapping from pair_id -> token mint address so that refresh() can pass
+        # the correct token_address to the market provider (Issue 1 fix).
+        self._pair_token_map: dict[str, str] = {}
 
     # ------------------------------------------------------------------
     # Watchlist add / pair resolution (Req 1.1, 1.2)
@@ -202,6 +206,10 @@ class DataIngestor:
         snapshot = result.value[0]
         pair_id = snapshot.pair_id
 
+        # Register the token_address -> pair_id mapping so refresh() can pass
+        # the correct token mint to the market provider's fetch_pair_snapshot.
+        self._pair_token_map[pair_id] = token_address
+
         entry = self._watchlist.add(
             WatchlistEntry(
                 pair_id=pair_id,
@@ -212,7 +220,21 @@ class DataIngestor:
 
         # Req 1.1: trigger the security evaluation for the resolved Token.
         if self._security is not None:
-            self._security.evaluate(self._token_for(token_address, network))
+            evaluation = self._security.evaluate(self._token_for(token_address, network))
+            # Emit a notification for High or Critical severity (Issue 6).
+            if self._stale_sink is not None and hasattr(evaluation, 'rating'):
+                if evaluation.rating in (Severity.HIGH, Severity.CRITICAL):
+                    self._stale_sink(
+                        Alert(
+                            title=f"{evaluation.rating.name} severity: {token_address[:12]}…",
+                            body=(
+                                f"Security evaluation for pair {pair_id} "
+                                f"assigned {evaluation.rating.name} severity."
+                            ),
+                            severity=evaluation.rating,
+                            pair_id=pair_id,
+                        )
+                    )
 
         if self._metrics is not None:
             self._metrics.register_pair(pair_id)
@@ -245,7 +267,9 @@ class DataIngestor:
         (Req 1.9). When no last-good snapshot exists yet, the underlying provider
         error is returned.
         """
-        result = self._market.fetch_pair_snapshot(pair_id)
+        # Resolve the token mint for this pair_id so Moralis gets the right key.
+        token_addr = self._pair_token_map.get(pair_id)
+        result = self._market.fetch_pair_snapshot(pair_id, token_address=token_addr)
         if result.is_ok():
             snapshot = result.value
             self._failure_counts[pair_id] = 0
@@ -327,6 +351,11 @@ class DataIngestor:
             )
             if self._metrics is not None:
                 self._metrics.register_pair(pair.id)
+
+            # Trigger security evaluation for the discovered token (Req 1.1).
+            if self._security is not None:
+                self._security.evaluate(self._token_for(pair.token.address, Network.SOLANA))
+
             added.append(pair.id)
 
         return Ok(
@@ -341,11 +370,47 @@ class DataIngestor:
     # Internals
     # ------------------------------------------------------------------
     def _resolve_candidate_pair(self, snapshot: PairSnapshot) -> TradingPair | None:
-        """Resolve a candidate snapshot to its persisted :class:`TradingPair`."""
+        """Resolve a candidate snapshot to its :class:`TradingPair`.
+
+        First checks the pair repository for an existing entry. If not found
+        (typical for discovery candidates), creates a minimal TradingPair from the
+        snapshot data and persists it, so that the recency and filter checks can
+        proceed. The ``created_at`` field uses the snapshot's ``fetched_at`` as a
+        conservative estimate unless the snapshot carries timing info in its origin
+        (the Moralis discover_recent_pairs already filters by ``createdAt``).
+        """
         found = self._pairs.get(snapshot.pair_id)
         if found.is_ok():
             return found.value
-        return None
+        # For discovery candidates, create a minimal TradingPair from the snapshot.
+        # The token_address may come from the snapshot or be derived from pair_id.
+        token_addr = snapshot.token_address or snapshot.pair_id
+        from decimal import Decimal as _Decimal
+        token = Token(
+            address=token_addr,
+            network=Network.SOLANA,
+            symbol="",
+            name="",
+            total_supply=_Decimal(0),
+        )
+        # Derive quote_asset: map the wrapped SOL mint to "SOL".
+        quote_asset = "SOL"  # Default for Pump.fun pairs
+
+        # Use fetched_at as the creation time (discover_recent_pairs already
+        # filters by the createdAt field from the exchange).
+        created_at = snapshot.fetched_at
+
+        pair = TradingPair(
+            id=snapshot.pair_id,
+            token=token,
+            quote_asset=quote_asset,
+            dex="pumpfun",
+            created_at=created_at,
+        )
+        self._pairs.add(pair)
+        # Also register the token_address mapping for refresh calls.
+        self._pair_token_map[snapshot.pair_id] = token_addr
+        return pair
 
     def _is_recent(self, pair: TradingPair, now: datetime) -> bool:
         """True iff ``pair`` was first listed within the discovery window (Req 1.5)."""
@@ -355,9 +420,23 @@ class DataIngestor:
     def _matches(
         filters: DiscoveryFilters, pair: TradingPair, snapshot: PairSnapshot
     ) -> bool:
-        """True iff ``pair``/``snapshot`` satisfy the discovery filters (Req 1.6)."""
-        if filters.quote_assets is not None and pair.quote_asset not in filters.quote_assets:
-            return False
+        """True iff ``pair``/``snapshot`` satisfy the discovery filters (Req 1.6).
+
+        Handles the case where Pump.fun pairs report the wrapped SOL mint
+        address instead of the symbol "SOL" as the quote asset.
+        """
+        if filters.quote_assets is not None:
+            # Normalize: the wrapped SOL mint is equivalent to "SOL"
+            _WSOL_MINT = "So11111111111111111111111111111111111111112"
+            quote = pair.quote_asset
+            # Check both the raw quote_asset and its normalized form
+            matches_quote = (
+                quote in filters.quote_assets
+                or (quote == _WSOL_MINT and "SOL" in filters.quote_assets)
+                or (quote == "SOL" and _WSOL_MINT in filters.quote_assets)
+            )
+            if not matches_quote:
+                return False
         if filters.min_liquidity is not None and snapshot.liquidity < filters.min_liquidity:
             return False
         return True

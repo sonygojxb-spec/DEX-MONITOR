@@ -6,11 +6,8 @@ Starts the agent in MONITORING-ONLY mode (no wallet, no trading).
 Reads secrets from a local .env file. Press Ctrl+C to stop.
 """
 
-import asyncio
 import os
-import inspect
 from datetime import timedelta
-from decimal import Decimal
 from typing import Any, Mapping
 
 import httpx
@@ -119,7 +116,11 @@ class SolanaRpcClient:
 class NoOpSigner:
     """Monitoring-only signer: refuses to sign, so trading is impossible."""
 
-    async def sign(self, transaction_bytes: bytes) -> bytes:
+    @property
+    def public_key(self) -> str:
+        return "NoOpSigner_MonitoringOnly"
+
+    def sign_transaction(self, serialized_tx: str) -> str:
         raise RuntimeError(
             "Trading is disabled (monitoring-only mode). No signer configured."
         )
@@ -132,21 +133,18 @@ def _require(name: str) -> str:
     value = os.environ.get(name, "").strip()
     if not value:
         raise SystemExit(
-            f"Missing required environment variable: {name}"
+            f"Missing required environment variable: {name}. "
             f"Set it in your .env file before running."
         )
-    return value
-async def _maybe_await(value):
-    """Await the value if it's a coroutine; otherwise return it as-is."""
-    if inspect.isawaitable(value):
-        return await value
     return value
 
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
-async def run_agent() -> None:
+def run_agent() -> None:
+    import time
+
     secrets = AgentSecrets(
         moralis_api_key=_require("MORALIS_API_KEY"),
         solana_rpc_url=_require("SOLANA_RPC_URL"),
@@ -192,8 +190,11 @@ async def run_agent() -> None:
         if seed:
             for mint in [m.strip() for m in seed.split(",") if m.strip()]:
                 try:
-                    res = await _maybe_await(agent.add_token(mint, Network.SOLANA))
-                    print(f"  seed add {mint[:8]}…: {res}")
+                    res = agent.add_token(mint, Network.SOLANA)
+                    if res.is_ok():
+                        print(f"  seed add {mint[:8]}…: ok (pair={res.value.pair_id})")
+                    else:
+                        print(f"  seed add {mint[:8]}…: {res.error}")
                 except Exception as e:
                     print(f"  seed add {mint[:8]}… error: {e!r}")
             print(f"  active pairs after seeding: {agent.orchestrator.active_count()}")
@@ -209,7 +210,6 @@ async def run_agent() -> None:
             max_age=timedelta(hours=24),
         )
 
-
         ticks_per_discovery = max(1, discovery_interval // refresh_interval)
 
         tick_count = 0
@@ -219,9 +219,14 @@ async def run_agent() -> None:
             # Periodic discovery scan
             if (tick_count - 1) % ticks_per_discovery == 0:
                 try:
-                    result = await _maybe_await(data_ingestor.discovery_scan(discovery_filters))
-                    print(f"[tick {tick_count}] discovery scan done | "
-                          f"result={result} | active pairs: {orchestrator.active_count()}")
+                    result = data_ingestor.discovery_scan(discovery_filters)
+                    if result.is_ok():
+                        outcome = result.value
+                        print(f"[tick {tick_count}] discovery scan done | "
+                              f"scanned={outcome.scanned} added={len(outcome.added)} | "
+                              f"active pairs: {orchestrator.active_count()}")
+                    else:
+                        print(f"[tick {tick_count}] discovery error: {result.error}")
                 except Exception as e:
                     print(f"[tick {tick_count}] discovery error: {e!r}")
 
@@ -234,7 +239,7 @@ async def run_agent() -> None:
 
             for pair_id in active:
                 try:
-                    await _maybe_await(orchestrator.tick(pair_id))
+                    orchestrator.tick(pair_id)
                 except Exception as e:
                     print(f"[tick {tick_count}] tick error {pair_id}: {e!r}")
 
@@ -243,7 +248,7 @@ async def run_agent() -> None:
             elif tick_count <= 3:
                 print(f"[tick {tick_count}] no active pairs yet; waiting for discovery...")
 
-            await asyncio.sleep(refresh_interval)
+            time.sleep(refresh_interval)
 
     finally:
         http_client.close()
@@ -251,9 +256,9 @@ async def run_agent() -> None:
 
 def main() -> None:
     try:
-        asyncio.run(run_agent())
+        run_agent()
     except KeyboardInterrupt:
-        print("Agent stopped by user.")
+        print("\nAgent stopped by user.")
 
 if __name__ == "__main__":
     main()

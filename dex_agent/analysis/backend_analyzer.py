@@ -287,7 +287,7 @@ class BackendAnalyzer:
         now = self._clock()
         tx_window = TxWindow(start=now - timedelta(minutes=window), end=now)
 
-        txs_result = self._chain.fetch_transactions(pair.id, tx_window)
+        txs_result = self._chain.fetch_transactions(pair.token.address, tx_window)
         if txs_result.is_err():
             return self._record_unavailable(pair, window, now, txs_result.error)
 
