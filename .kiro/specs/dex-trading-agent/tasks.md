@@ -37,7 +37,7 @@ running system, with no orphaned code:
 ## Tasks
 
 - [x] 1. Set up project structure, tooling, and test harness
-  - [ ] 1.1 Scaffold the package layout, tooling, and shared Result/error types
+  - [x] 1.1 Scaffold the package layout, tooling, and shared Result/error types
     - Create the Python package layout: `dex_agent/` with sub-packages `models/`, `providers/`,
       `repositories/`, `analysis/`, `decision/`, `execution/`, `control/`, `notify/`, `config/`,
       `audit/`; and a `tests/` tree mirroring it.
@@ -73,7 +73,7 @@ running system, with no orphaned code:
       default 15), plus `discovery_scan_interval_s` (range [30,300]) and a single `measurement_period_s`
       (range [60,86400]).
     - _Requirements: 3.x, 4.x, 5.x, 6.x, 7.1, 7.2, 9.1, 9.x, 10.1, 11.6, 12.1-12.4; Design: "Data Models"_
-  - [x]* 2.3 Write unit tests for model construction and the severity ordering helper
+  - [x] 2.3 Write unit tests for model construction and the severity ordering helper
     - Verify `Severity` ordering and `max_by_ordinal` edge cases (empty, single, ties).
     - _Requirements: 2.1, 2.7_
 
@@ -152,7 +152,7 @@ running system, with no orphaned code:
       for tight polling of those events. DexScreener limits (~300/min token/pair, ~60/min
       profiles/boosts) apply **only when the DexScreener fallback is active**; GoPlus per its plan.
     - _Requirements: supports 1.7, 1.10; Design: "Concurrency", "Rate Limits & Real-Time Strategy"_
-  - [x]* 4.4 Write adapter unit tests with mocked HTTP/RPC clients
+  - [x] 4.4 Write adapter unit tests with mocked HTTP/RPC clients
     - Verify request batching, response-to-model mapping, error/timeout typing, and rate-limiter
       behavior using mocked clients (no real network/chain calls). Include **MoralisAdapter**
       mapping/batching tests across **both hosts** (`solana-gateway.moralis.io` token metadata + POST
@@ -186,16 +186,16 @@ running system, with no orphaned code:
       `refresh_interval_s` (Data_Refresh_Interval, [5,300]) and the single `measurement_period_s`
       ([60,86400]) so all are validated as numeric, in-range parameters (Req 9.1).
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7; Design: "Config_Manager"_
-  - [x]* 5.2 Write property test for configuration validation
+  - [x] 5.2 Write property test for configuration validation
     - **Property 29: Configuration validation accepts exactly in-range numeric values**
     - **Validates: Requirements 9.1, 9.2, 9.3, 9.7**
-  - [x]* 5.3 Write property test for persistence round-trip and latest-wins load
+  - [x] 5.3 Write property test for persistence round-trip and latest-wins load
     - **Property 30: Configuration persistence round-trip and latest-wins**
     - **Validates: Requirements 9.4, 9.5**
-  - [x]* 5.4 Write property test for documented defaults within allowed ranges
+  - [x] 5.4 Write property test for documented defaults within allowed ranges
     - **Property 31: Documented defaults fall within their allowed ranges**
     - **Validates: Requirements 9.6**
-  - [x]* 5.5 Write unit test for config persistence-failure indication
+  - [x] 5.5 Write unit test for config persistence-failure indication
     - Verify active config retained and failure surfaced when the config repo fails.
     - _Requirements: 9.7_
 
@@ -229,16 +229,16 @@ running system, with no orphaned code:
       an active, unrenounced mint authority and freeze authority** (GoPlus optional as a corroborating
       fallback); Property 3 mapping is unchanged.
     - _Requirements: 2.9, 2.10; Design: "Security_Inspector", "Solana Security Semantics"_
-  - [x]* 7.3 Write property test for severity membership
+  - [x] 7.3 Write property test for severity membership
     - **Property 1: Severity rating is always a member of the ordered set**
     - **Validates: Requirements 2.1**
-  - [x]* 7.4 Write property test for max-contributing-severity aggregation
+  - [x] 7.4 Write property test for max-contributing-severity aggregation
     - **Property 2: Overall severity equals the maximum contributing severity**
     - **Validates: Requirements 2.5, 2.7, 2.4**
-  - [x]* 7.5 Write property test for unverified-contract rating
+  - [x] 7.5 Write property test for unverified-contract rating
     - **Property 3: Unverified or unretrievable contracts rate High**
     - **Validates: Requirements 2.9**
-  - [x]* 7.6 Write unit tests for issue-record completeness and timestamp formatting
+  - [x] 7.6 Write unit tests for issue-record completeness and timestamp formatting
     - _Requirements: 2.6, 2.8_
 
 - [x] 8. Implement Backend_Analyzer
@@ -257,19 +257,19 @@ running system, with no orphaned code:
       exceeded, persist analysis with pair_id + timestamp, and on provider unavailability record an
       error result while retaining prior results and producing no new classification.
     - _Requirements: 3.6, 3.7, 3.8, 3.9; Design: "Backend_Analyzer"_
-  - [x]* 8.3 Write property test for distinct wallet count
+  - [x] 8.3 Write property test for distinct wallet count
     - **Property 5: Distinct wallet count equals wallet-set cardinality**
     - **Validates: Requirements 3.1, 3.4**
-  - [x]* 8.4 Write property test for classification partition
+  - [x] 8.4 Write property test for classification partition
     - **Property 6: Wallet classification partitions all transacting wallets**
     - **Validates: Requirements 3.2**
-  - [x]* 8.5 Write property test for bot-transaction percentage bounds/correctness
+  - [x] 8.5 Write property test for bot-transaction percentage bounds/correctness
     - **Property 7: Bot transaction percentage is bounded and correct**
     - **Validates: Requirements 3.3, 3.4**
-  - [x]* 8.6 Write property test for holder concentration and flagging
+  - [x] 8.6 Write property test for holder concentration and flagging
     - **Property 8: Holder concentration is bounded and flagged correctly**
     - **Validates: Requirements 3.6, 3.7**
-  - [x]* 8.7 Write unit tests for analysis-record persistence and data-unavailable path
+  - [x] 8.7 Write unit tests for analysis-record persistence and data-unavailable path
     - _Requirements: 3.8, 3.9_
 
 - [x] 9. Implement Metrics_Tracker
@@ -287,16 +287,16 @@ running system, with no orphaned code:
     - Implement `query_history` using the shared in-range primitive: reject `NOT_MONITORED`, reject
       inverted range with `INVALID_RANGE` (no mutation), and return ascending entries (possibly empty).
     - _Requirements: 4.6, 4.7, 4.8, 4.9; Design: "Metrics_Tracker"_
-  - [x]* 9.3 Write property test for ascending-ordered series storage
+  - [x] 9.3 Write property test for ascending-ordered series storage
     - **Property 12: Metric series is stored in ascending timestamp order**
     - **Validates: Requirements 4.4, 4.10**
-  - [x]* 9.4 Write property test for in-range query correctness (covers metrics and audit)
+  - [x] 9.4 Write property test for in-range query correctness (covers metrics and audit)
     - **Property 13: Range queries return exactly the in-range entries, ascending**
     - **Validates: Requirements 4.6, 4.9, 10.2, 10.3**
-  - [x]* 9.5 Write property test for inverted-range rejection without mutation (covers metrics and audit)
+  - [x] 9.5 Write property test for inverted-range rejection without mutation (covers metrics and audit)
     - **Property 14: Inverted time ranges are rejected without mutation**
     - **Validates: Requirements 4.7, 4.8, 10.4**
-  - [x]* 9.6 Write unit tests for metric-recording fields and not-monitored query error
+  - [x] 9.6 Write unit tests for metric-recording fields and not-monitored query error
     - _Requirements: 4.1-4.3, 4.5, 4.8_
 
 - [x] 10. Implement Audit / persistence service
@@ -306,10 +306,10 @@ running system, with no orphaned code:
       shared in-range/inverted-range logic) and `enforce_retention` (period 30-3650 days, default 30)
       deleting exactly records older than the period.
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7; Design: "Audit / Persistence Service"_
-  - [x]* 10.2 Write property test for retention deletion boundary
+  - [x] 10.2 Write property test for retention deletion boundary
     - **Property 15: Retention deletes exactly the records older than the period**
     - **Validates: Requirements 10.5, 10.6**
-  - [x]* 10.3 Write unit tests for audit record content/precision and persistence-failure record
+  - [x] 10.3 Write unit tests for audit record content/precision and persistence-failure record
     - _Requirements: 10.1, 10.7_
 
 - [x] 11. Checkpoint - analysis and persistence
@@ -327,16 +327,16 @@ running system, with no orphaned code:
     - When required metrics are stale/unavailable, skip computation, record the skipped condition,
       and retain previously generated signals.
     - _Requirements: 5.7; Design: "Signal_Engine"_
-  - [x]* 12.3 Write property test for entry eligibility predicate
+  - [x] 12.3 Write property test for entry eligibility predicate
     - **Property 16: Entry eligibility predicate**
     - **Validates: Requirements 5.2**
-  - [x]* 12.4 Write property test for rug-pull exit predicate
+  - [x] 12.4 Write property test for rug-pull exit predicate
     - **Property 17: Rug-pull exit predicate**
     - **Validates: Requirements 5.3**
-  - [x]* 12.5 Write property test for dump exit predicate
+  - [x] 12.5 Write property test for dump exit predicate
     - **Property 18: Dump exit predicate**
     - **Validates: Requirements 5.4**
-  - [x]* 12.6 Write unit tests for signal record content and skip-on-stale path
+  - [x] 12.6 Write unit tests for signal record content and skip-on-stale path
     - _Requirements: 5.6, 5.7_
 
 - [x] 13. Implement Risk_Manager (safety-critical)
@@ -350,16 +350,16 @@ running system, with no orphaned code:
     - Implement `monitor_stop_loss` (request full-position sell when unrealized loss% >= stop-loss%)
       and `update_profile` so updates apply only to decisions initiated after completion.
     - _Requirements: 7.5, 7.6; Design: "Risk_Manager", "Concurrency / shared-state safety"_
-  - [x]* 13.3 Write property test for risk approval predicate
+  - [x] 13.3 Write property test for risk approval predicate
     - **Property 19: Risk approval predicate**
     - **Validates: Requirements 7.2, 7.3, 7.4, 7.7**
-  - [x]* 13.4 Write property test for rejected-order immutability
+  - [x] 13.4 Write property test for rejected-order immutability
     - **Property 20: Rejected orders never change positions**
     - **Validates: Requirements 7.3, 7.4**
-  - [x]* 13.5 Write property test for stop-loss full-position sell trigger
+  - [x] 13.5 Write property test for stop-loss full-position sell trigger
     - **Property 21: Stop-loss triggers a full-position sell**
     - **Validates: Requirements 7.5**
-  - [x]* 13.6 Write property test for non-retroactive profile updates
+  - [x] 13.6 Write property test for non-retroactive profile updates
     - **Property 22: Risk-profile updates do not retroactively alter decisions**
     - **Validates: Requirements 7.6**
 
@@ -370,7 +370,7 @@ running system, with no orphaned code:
       monitoring, record `REVOKED`), and `trading_enabled()` defaulting false until an authorized
       wallet is connected. Record every status change with a timestamp.
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6; Design: "Authorization_Manager"_
-  - [x]* 14.2 Write unit tests for auth status-change records and monitoring-retained-after-revoke
+  - [x] 14.2 Write unit tests for auth status-change records and monitoring-retained-after-revoke
     - _Requirements: 11.5, 11.6_
 
 - [x] 15. Implement Trade_Executor (safety-critical)
@@ -390,19 +390,19 @@ running system, with no orphaned code:
       the Telegram bot token are supplied from secrets/config. The signer path is reachable only when an
       authorized wallet is connected AND automated trading is enabled (Property 23).
     - _Requirements: 6.4, 6.5, 6.6, 6.7, 6.8; Design: "Trade_Executor", "Signer / Key Handling", "Security Considerations"_
-  - [x]* 15.3 Write property test for trades requiring an assigned severity rating
+  - [x] 15.3 Write property test for trades requiring an assigned severity rating
     - **Property 4: Trades require an assigned severity rating**
     - **Validates: Requirements 2.3**
-  - [x]* 15.4 Write property test for monitoring-only safety gate
+  - [x] 15.4 Write property test for monitoring-only safety gate
     - **Property 23: Monitoring-only safety - no order without authorization and enablement**
     - **Validates: Requirements 6.3, 11.2, 11.3, 11.4**
-  - [x]* 15.5 Write property test for slippage attachment on submitted orders
+  - [x] 15.5 Write property test for slippage attachment on submitted orders
     - **Property 24: Submitted orders carry the configured slippage tolerance**
     - **Validates: Requirements 6.4**
-  - [x]* 15.6 Write property test for no-side-effect on non-confirmed orders
+  - [x] 15.6 Write property test for no-side-effect on non-confirmed orders
     - **Property 25: Non-confirmed orders never change position or balance**
     - **Validates: Requirements 6.6, 6.7, 6.8**
-  - [x]* 15.7 Write unit test for order confirmation record fields
+  - [x] 15.7 Write unit test for order confirmation record fields
     - _Requirements: 6.5_
   - [x] 15.8 Implement the in-flight / idempotency guard
     - Enforce at most one in-flight order per Trading_Pair via the `InFlightRegistry`: submit no new
@@ -417,10 +417,10 @@ running system, with no orphaned code:
       the Risk_Profile limits; if available Quote_Asset balance is insufficient to fund the prepared
       order, submit no order, record an insufficient-balance reason, and notify.
     - _Requirements: 6.9, 6.10, 7.1, 7.2; Design: "Trade_Executor"_
-  - [x]* 15.10 Write property test for trade idempotency and in-flight order control
+  - [x] 15.10 Write property test for trade idempotency and in-flight order control
     - **Property 32: Trade idempotency and in-flight order control**
     - **Validates: Requirements 12.1, 12.2, 12.3, 12.4**
-  - [x]* 15.11 Write property test for order sizing and balance sufficiency
+  - [x] 15.11 Write property test for order sizing and balance sufficiency
     - **Property 34: Order sizing and balance sufficiency**
     - **Validates: Requirements 6.9, 6.10**
 
@@ -436,16 +436,16 @@ running system, with no orphaned code:
       alerts; support order-confirmation messages, High/Critical severity alerts, and the configurable
       exit-signal retry budget (1-10, default 3).
     - _Requirements: 5.8, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6; Design: "Notifier", "Alerting"_
-  - [x]* 17.2 Write property test for bounded retry with recorded final status
+  - [x] 17.2 Write property test for bounded retry with recorded final status
     - **Property 26: Bounded retry with recorded final status**
     - **Validates: Requirements 5.8, 8.4, 8.5**
-  - [x]* 17.3 Write property test for dispatch to every enabled channel
+  - [x] 17.3 Write property test for dispatch to every enabled channel
     - **Property 27: Alerts are dispatched to every enabled channel**
     - **Validates: Requirements 8.3, 8.5**
-  - [x]* 17.4 Write property test for quiet-hours suppression preserving Critical and held-position exits
+  - [x] 17.4 Write property test for quiet-hours suppression preserving Critical and held-position exits
     - **Property 28: Quiet-hours suppression preserves Critical and held-position Exit_Signal alerts**
     - **Validates: Requirements 8.6**
-  - [x]* 17.5 Write unit test for confirmation-message content
+  - [x] 17.5 Write unit test for confirmation-message content
     - _Requirements: 8.1_
 
 - [x] 18. Implement Data_Ingestor and Monitoring Orchestrator
@@ -465,16 +465,16 @@ running system, with no orphaned code:
       data; `tick` runs ingest -> analyze -> track -> signal per refresh interval with per-task
       isolation/timeouts.
     - _Requirements: 1.3, 1.4, 1.10, 1.11; Design: "Monitoring Orchestrator", "Concurrency"_
-  - [x]* 18.3 Write property test for the concurrency cap
+  - [x] 18.3 Write property test for the concurrency cap
     - **Property 9: Concurrency cap is never exceeded**
     - **Validates: Requirements 1.10, 1.11**
-  - [x]* 18.4 Write property test for discovery adding only recent, matching pairs
+  - [x] 18.4 Write property test for discovery adding only recent, matching pairs
     - **Property 10: Discovery adds only recent, matching pairs**
     - **Validates: Requirements 1.5, 1.6**
-  - [x]* 18.5 Write property test for fetch-failure last-good retention and bounded retries
+  - [x] 18.5 Write property test for fetch-failure last-good retention and bounded retries
     - **Property 11: Fetch failures retain last-good data and bound retries**
     - **Validates: Requirements 1.8, 1.9**
-  - [x]* 18.6 Write unit tests for pair-not-found rejection and remove-retains-data
+  - [x] 18.6 Write unit tests for pair-not-found rejection and remove-retains-data
     - _Requirements: 1.2, 1.3, 1.4_
   - [x] 18.7 Derive the effective market-data poll interval from the rate-limiter budget
     - Using the per-provider rate limiter (Task 4.3), compute an effective market-data poll interval
@@ -500,7 +500,7 @@ running system, with no orphaned code:
       unreadable, start in monitoring-only mode, surface a recovery-failure indication, and submit no
       orders until resolved.
     - _Requirements: 13.1, 13.2, 13.3, 13.4; Design: "Monitoring Orchestrator", "recover_on_startup"_
-  - [x]* 18.10 Write property test for startup state recovery
+  - [x] 18.10 Write property test for startup state recovery
     - **Property 33: Startup state recovery**
     - **Validates: Requirements 13.1, 13.2, 13.3, 13.4**
 
@@ -526,27 +526,27 @@ running system, with no orphaned code:
       into the Trade_Executor and supply the `Per_Order_Size` (`RiskProfile.per_order_size`)
       configuration used for order sizing.
     - _Requirements: 9.5, 9.6, 11.3, 12.1-12.4, 13.1-13.4, 6.9; Design: "Architecture", "External Integrations", "Security Considerations"_
-  - [x]* 19.2 Write integration test for watchlist add -> monitoring begins
+  - [x] 19.2 Write integration test for watchlist add -> monitoring begins
     - Add a resolvable token via a faked market provider; assert monitoring starts and remove stops it.
     - _Requirements: 1.1, 1.3_
-  - [x]* 19.3 Write integration test for the end-to-end authorized buy/sell happy path
+  - [x] 19.3 Write integration test for the end-to-end authorized buy/sell happy path
     - With a faked venue: authorize wallet, enable trading, drive an eligible entry through Risk_Manager
       to a confirmed buy, then an exit signal to a confirmed sell, asserting confirmation notifications.
     - _Requirements: 6.1, 6.2, 8.1_
-  - [x]* 19.4 Write integration tests for cadence and timing behaviors
+  - [x] 19.4 Write integration tests for cadence and timing behaviors
     - Discovery/refresh cadence, contract re-evaluation on state change, signal cadence, severity and
       bot-percentage alert timing, exit-signal alert timing, and stop-loss evaluation cadence using
       faked providers and a controllable clock.
     - _Requirements: 1.5, 1.7, 2.2, 2.10, 3.5, 5.1, 5.5, 7.5, 8.2_
-  - [x]* 19.5 Write capacity smoke test for 200 concurrent monitoring loops
+  - [x] 19.5 Write capacity smoke test for 200 concurrent monitoring loops
     - Register 200 pairs and assert the registry stays responsive and the cap holds.
     - _Requirements: 1.10_
-  - [x]* 19.6 Write integration test for restart state recovery
+  - [x] 19.6 Write integration test for restart state recovery
     - Persist open Positions and an active Watchlist, restart the Agent, and assert recovery restores
       exactly those Positions (with stop-loss/exit evaluation resumed) and resumes monitoring of those
       pairs before any trade-affecting operation.
     - _Requirements: 13.1, 13.2, 13.3_
-  - [x]* 19.7 Write integration test for duplicate-order suppression
+  - [x] 19.7 Write integration test for duplicate-order suppression
     - With a faked venue and an in-flight/open Position, assert a second buy/sell for the same pair is
       suppressed with no state change and the in-flight marker clears on terminal status.
     - _Requirements: 12.1, 12.2, 12.3, 12.4_
