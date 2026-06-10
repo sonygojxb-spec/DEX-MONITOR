@@ -174,7 +174,7 @@ def test_bot_percentage_alert_timing():
         )
         for i in range(5)
     ]
-    fakes.chain.set_transactions(PAIR, txs)
+    fakes.chain.set_transactions(TOKEN, txs)
 
     result = agent.backend_analyzer.analyze(pair)
     assert result.is_ok()

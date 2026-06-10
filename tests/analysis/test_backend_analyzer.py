@@ -84,7 +84,7 @@ def build_analyzer(
 ) -> tuple[BackendAnalyzer, TradingPair, FakeChainDataProvider]:
     pair = make_pair()
     chain = chain or FakeChainDataProvider()
-    chain.set_transactions(pair.id, txs)
+    chain.set_transactions(pair.token.address, txs)
     chain.set_holders(pair.token.address, holders or [])
     analyzer = BackendAnalyzer(
         chain,
@@ -314,7 +314,7 @@ def test_data_unavailable_on_transactions_records_marker_and_retains_prior() -> 
 
     # First, a successful analysis at t0 (the "prior" result to retain).
     chain.set_transactions(
-        pair.id,
+        pair.token.address,
         [
             ChainTx(
                 signature="s1",
@@ -356,7 +356,7 @@ def test_data_unavailable_on_holders_records_marker() -> None:
     repo = InMemoryWalletAnalysisRepository()
     pair = make_pair()
     chain = FakeChainDataProvider()
-    chain.set_transactions(pair.id, [])
+    chain.set_transactions(pair.token.address, [])
     chain.fail_always(
         "fetch_holder_distribution", TimedOut("slow", timeout_s=30.0)
     )

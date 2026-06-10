@@ -109,6 +109,12 @@ class PairSnapshot:
     ``fetched_at`` is recorded to second-level precision. ``is_stale`` is
     ``True`` when the snapshot is the last-good value served after a fetch
     failure (Requirements 1.8, 1.9).
+
+    ``token_address`` carries the SPL token mint address when available. This
+    is the key used by Moralis analytics/price endpoints (which are token-mint
+    keyed, NOT pair-address keyed). When populated, downstream consumers
+    (fetch_pair_snapshot, SecurityInspector, etc.) use it instead of ``pair_id``
+    for Moralis API calls.
     """
 
     pair_id: str
@@ -121,6 +127,7 @@ class PairSnapshot:
     buy_volume: Decimal
     sell_volume: Decimal
     fetched_at: datetime
+    token_address: str | None = None
     audit: AuditInfo | None = None
     is_stale: bool = False
 

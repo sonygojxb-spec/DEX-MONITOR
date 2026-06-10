@@ -120,7 +120,7 @@ class FakeMarketDataProvider(_Recorder, MarketDataProvider):
             return Err(NotFound("no pairs for token", identifier=token_address))
         return Ok(list(pairs))
 
-    def fetch_pair_snapshot(self, pair_id: str) -> Result[PairSnapshot]:
+    def fetch_pair_snapshot(self, pair_id: str, *, token_address: str | None = None) -> Result[PairSnapshot]:
         self.record("fetch_pair_snapshot", pair_id)
         err = self._next_error("fetch_pair_snapshot")
         if err is not None:

@@ -731,7 +731,13 @@ def build_agent(
 
     # -- control layer ----------------------------------------------------
     def admit(pair_id: str):
-        return holders["orch"].add_pair(pair_id)
+        # Look up the token_address from the pair repo so the orchestrator's
+        # MonitorHandle carries it for security/signal lookups.
+        token_addr = None
+        pair_result = repos.pairs.get(pair_id)
+        if pair_result.is_ok():
+            token_addr = pair_result.value.token.address
+        return holders["orch"].add_pair(pair_id, token_address=token_addr)
 
     data_ingestor = DataIngestor(
         providers.market,
