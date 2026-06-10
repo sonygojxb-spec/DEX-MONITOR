@@ -20,8 +20,20 @@ An autonomous monitoring, analysis, and trading agent for tokens on Solana decen
 
 ## Architecture
 
-┌─────────────────────────────────────────────────────────────┐ │ DEX Trading Agent │ ├─────────────────────────────────────────────────────────────┤ │ Ingestion │ Moralis API (primary) + Solana RPC │ │ Real-Time │ Moralis Solana Streams (webhooks) │ │ Analysis │ Security Inspector, Backend Analyzer, │ │ │ Metrics Tracker │ │ Decision │ Signal Engine, Risk Manager │ │ Execution │ Jupiter Adapter (swap), Trade Executor │ │ Alerts │ Telegram Bot + GUI Channel │ │ Persistence │ In-memory repositories + audit trail │ └─────────────────────────────────────────────────────────────┘
-
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    DEX Trading Agent                         │
+├─────────────────────────────────────────────────────────────┤
+│  Ingestion    │ Moralis API (primary) + Solana RPC          │
+│  Real-Time    │ Moralis Solana Streams (webhooks)           │
+│  Analysis     │ Security Inspector, Backend Analyzer,       │
+│               │ Metrics Tracker                             │
+│  Decision     │ Signal Engine, Risk Manager                 │
+│  Execution    │ Jupiter Adapter (swap), Trade Executor      │
+│  Alerts       │ Telegram Bot + GUI Channel                  │
+│  Persistence  │ In-memory repositories + audit trail        │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ## Safety Guardrails
 
@@ -55,11 +67,13 @@ python -m venv .venv
 # source .venv/bin/activate  # Linux/Mac
 pip install -e ".[test]"
 pip install httpx python-dotenv customtkinter
+```
 
-Configuration
+### Configuration
 
-Create a .env file in the project root (never commit this):
+Create a `.env` file in the project root (never commit this):
 
+```env
 MORALIS_API_KEY=your_moralis_api_key
 SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token
@@ -69,20 +83,25 @@ TELEGRAM_CHAT_ID=your_telegram_chat_id
 GOPLUS_API_KEY=your_goplus_key
 WEBHOOK_URL=https://your-domain.com/webhook
 SEED_TOKENS=DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263
+```
 
-Run
+### Run
 
-Desktop App (GUI):
-
+**Desktop App (GUI):**
+```bash
 python -m dex_agent.gui
+```
 
-Command Line:
-
+**Command Line:**
+```bash
 python -m dex_agent
+```
 
 Both start in monitoring-only mode — no trading possible without explicit wallet connection.
-Project Structure
 
+## Project Structure
+
+```
 dex_agent/
 ├── __main__.py              # CLI entry point
 ├── agent.py                 # Agent composition & build_production_agent()
@@ -145,18 +164,23 @@ dex_agent/
     │   └── controls.py      #   Start/Stop/Settings buttons
     └── dialogs/
         └── settings.py      #   Configuration dialog (all thresholds)
+```
 
-External Integrations
-Provider	Role	Endpoint
-Moralis (PRIMARY)	Market data, holders, swaps, Token Score, Streams	solana-gateway.moralis.io + deep-index.moralis.io
-Solana RPC	Mint/freeze authority (authoritative), supply, confirmation	api.mainnet-beta.solana.com
-Moralis Streams	Real-time rug/dump detection via webhooks	api.moralis-streams.com
-Jupiter	Swap execution + price quotes	dev.jup.ag
-Telegram	Alert notifications	api.telegram.org
-DexScreener (optional)	Market data fallback	docs.dexscreener.com
-GoPlus (optional)	Security signal corroboration	docs.gopluslabs.io
-Testing
+## External Integrations
 
+| Provider | Role | Endpoint |
+|----------|------|----------|
+| **Moralis** (PRIMARY) | Market data, holders, swaps, Token Score, Streams | solana-gateway.moralis.io + deep-index.moralis.io |
+| **Solana RPC** | Mint/freeze authority (authoritative), supply, confirmation | api.mainnet-beta.solana.com |
+| **Moralis Streams** | Real-time rug/dump detection via webhooks | api.moralis-streams.com |
+| **Jupiter** | Swap execution + price quotes | dev.jup.ag |
+| **Telegram** | Alert notifications | api.telegram.org |
+| **DexScreener** _(optional)_ | Market data fallback | docs.dexscreener.com |
+| **GoPlus** _(optional)_ | Security signal corroboration | docs.gopluslabs.io |
+
+## Testing
+
+```bash
 # Run the full test suite (394 tests)
 pytest
 
@@ -168,74 +192,82 @@ pytest -k "property" -v
 
 # Run a specific test module
 pytest tests/analysis/test_security_inspector.py -v
+```
 
-Test Strategy
+### Test Strategy
 
-    34 Correctness Properties — verified by Hypothesis property-based tests (100+ iterations each)
-    Unit tests — record completeness, error paths, edge cases
-    Integration tests — end-to-end workflows, timing, capacity (200 pairs)
-    All tests use in-memory fakes — no real network/chain calls in tests
+- **34 Correctness Properties** — verified by Hypothesis property-based tests (100+ iterations each)
+- **Unit tests** — record completeness, error paths, edge cases
+- **Integration tests** — end-to-end workflows, timing, capacity (200 pairs)
+- All tests use **in-memory fakes** — no real network/chain calls in tests
 
-Key Properties Verified
-#	Property	What it guarantees
-1	Severity membership	Rating is always in {None, Low, Medium, High, Critical}
-9	Concurrency cap	Active pairs never exceeds 200
-17	Rug-pull predicate	Exit signal fires iff liquidity drops > threshold
-19	Risk approval	Buy approved iff within per-token + total exposure + severity limits
-23	Monitoring-only safety	No order submitted without authorization + enablement
-25	Non-confirmed orders	Failed/timed-out orders never change position or balance
-32	Trade idempotency	At most one in-flight order per pair; no duplicates
-33	Startup recovery	Positions and watchlist restored correctly on restart
+### Key Properties Verified
 
-(See .kiro/specs/dex-trading-agent/design.md for all 34 properties)
-Spec Documentation
+| # | Property | What it guarantees |
+|---|----------|-------------------|
+| 1 | Severity membership | Rating is always in {None, Low, Medium, High, Critical} |
+| 9 | Concurrency cap | Active pairs never exceeds 200 |
+| 17 | Rug-pull predicate | Exit signal fires iff liquidity drops > threshold |
+| 19 | Risk approval | Buy approved iff within per-token + total exposure + severity limits |
+| 23 | Monitoring-only safety | No order submitted without authorization + enablement |
+| 25 | Non-confirmed orders | Failed/timed-out orders never change position or balance |
+| 32 | Trade idempotency | At most one in-flight order per pair; no duplicates |
+| 33 | Startup recovery | Positions and watchlist restored correctly on restart |
 
-The full formal specification lives in .kiro/specs/dex-trading-agent/:
+(See `.kiro/specs/dex-trading-agent/design.md` for all 34 properties)
 
-    requirements.md — 13 EARS-format requirements with testable acceptance criteria
-    design.md — architecture, data models, component interfaces, 34 correctness properties, Moralis endpoint reference, security considerations
-    tasks.md — 20 implementation tasks with dependency graph and property coverage map
+## Spec Documentation
 
-Configuration Parameters
-Parameter	Range	Default	Description
-refresh_interval_s	5–300	30	Market data polling interval
-signal_interval_s	1–300	15	Signal computation interval
-discovery_scan_interval_s	30–300	60	New token discovery scan cadence
-measurement_period_s	60–86400	3600	Aggregation window for volumes/counts
-bot_pct_threshold	0–100	50	Bot % alert threshold
-holder_conc_threshold	0–100	50	Top-10 holder concentration alert
-rugpull_threshold	0–100	50	Liquidity drop % for rug-pull exit
-dump_threshold	0.1–100	50	Sell/buy volume ratio for dump exit
-entry_threshold	0–100	50	Entry signal score threshold
-slippage_tolerance	0.01–100	1	Max acceptable slippage %
-confirmation_timeout_s	10–600	60	On-chain confirmation timeout
-exit_alert_retries	1–10	3	Exit alert delivery retry count
-retention_days	30–3650	30	Audit record retention period
-Security
+The full formal specification lives in `.kiro/specs/dex-trading-agent/`:
 
-    API keys loaded from .env (gitignored), never hard-coded
-    Private keys never stored — signing via injected signer abstraction
-    Monitoring-only default — physically cannot trade without explicit enablement
-    Untrusted data — all provider responses validated and range-checked
-    Audit trail — every analysis and action persisted with UTC timestamps
+- **requirements.md** — 13 EARS-format requirements with testable acceptance criteria
+- **design.md** — architecture, data models, component interfaces, 34 correctness properties, Moralis endpoint reference, security considerations
+- **tasks.md** — 20 implementation tasks with dependency graph and property coverage map
 
-Roadmap
+## Configuration Parameters
 
-    Monitoring-only MVP (discovery, security, metrics, signals, alerts)
-    Desktop GUI (CustomTkinter dark-mode app)
-    Safety-critical trading components (Risk Manager, Trade Executor)
-    Live trading validation (devnet testing)
-    Signal scoring tuning with real market data
-    Web dashboard (FastAPI + frontend)
-    Multi-chain support (EVM chains via new adapters)
+| Parameter | Range | Default | Description |
+|-----------|-------|---------|-------------|
+| refresh_interval_s | 5–300 | 30 | Market data polling interval |
+| signal_interval_s | 1–300 | 15 | Signal computation interval |
+| discovery_scan_interval_s | 30–300 | 60 | New token discovery scan cadence |
+| measurement_period_s | 60–86400 | 3600 | Aggregation window for volumes/counts |
+| bot_pct_threshold | 0–100 | 50 | Bot % alert threshold |
+| holder_conc_threshold | 0–100 | 50 | Top-10 holder concentration alert |
+| rugpull_threshold | 0–100 | 50 | Liquidity drop % for rug-pull exit |
+| dump_threshold | 0.1–100 | 50 | Sell/buy volume ratio for dump exit |
+| entry_threshold | 0–100 | 50 | Entry signal score threshold |
+| slippage_tolerance | 0.01–100 | 1 | Max acceptable slippage % |
+| confirmation_timeout_s | 10–600 | 60 | On-chain confirmation timeout |
+| exit_alert_retries | 1–10 | 3 | Exit alert delivery retry count |
+| retention_days | 30–3650 | 30 | Audit record retention period |
 
-License
+## Security
+
+- **API keys** loaded from `.env` (gitignored), never hard-coded
+- **Private keys** never stored — signing via injected signer abstraction
+- **Monitoring-only default** — physically cannot trade without explicit enablement
+- **Untrusted data** — all provider responses validated and range-checked
+- **Audit trail** — every analysis and action persisted with UTC timestamps
+
+## Roadmap
+
+- [x] Monitoring-only MVP (discovery, security, metrics, signals, alerts)
+- [x] Desktop GUI (CustomTkinter dark-mode app)
+- [x] Safety-critical trading components (Risk Manager, Trade Executor)
+- [ ] Live trading validation (devnet testing)
+- [ ] Signal scoring tuning with real market data
+- [ ] Web dashboard (FastAPI + frontend)
+- [ ] Multi-chain support (EVM chains via new adapters)
+
+## License
 
 MIT
 
-Warning: This agent can trade real funds when trading is enabled. Always:
+---
 
-    Start in monitoring-only mode and observe for days/weeks
-    Use a dedicated bot wallet with limited funds
-    Test on devnet or with tiny amounts before real capital
-    The entry signal scoring needs real-world tuning — the framework is correct, but weights need market observation to refine
+**⚠️ Warning:** This agent can trade real funds when trading is enabled. Always:
+- Start in monitoring-only mode and observe for days/weeks
+- Use a dedicated bot wallet with limited funds
+- Test on devnet or with tiny amounts before real capital
+- The entry signal scoring needs real-world tuning — the framework is correct, but weights need market observation to refine
